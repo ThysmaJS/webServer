@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Connexion DonSecure</title>
+</head>
+<body>
+  <h1>Authentification JWT</h1>
+  <button id="login">Générer un JWT</button>
+  <pre id="output"></pre>
+
+  <script>
+    document.getElementById("login").onclick = async function () {
+      try {
+        const res = await fetch("/jwt/login.php", { method: "POST" });
+
+        if (!res.ok) {
+          throw new Error("Erreur lors de la génération du token.");
+        }
+
+        const data = await res.json();
+
+        // ✅ Pop-up après génération
+        alert("Token généré et stocké dans un cookie !");
+
+        // ✅ Redirection après confirmation
+        window.location.href = "/";
+      } catch (err) {
+        document.getElementById("output").textContent = "Erreur : " + err.message;
+      }
+    };
+  </script>
+</body>
+</html>

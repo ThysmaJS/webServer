@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+
+  apache:
+    build: ./apache
+    container_name: apache
+    restart: unless-stopped
+    volumes:
+      - ./apache/html:/var/www/html
+    networks:
+      - backend
+    environment:
+      - HO=nginx
+
+  nginx:
+    build: ./nginx
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/jwt:/var/www/jwt
+    networks:
+      - backend
+    depends_on:
+      - apache
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: authCB
+      POSTGRES_USER: authcb
+      POSTGRES_PASSWORD: authcb
+    volumes:
+      - ./postgresql/setup-bdd.sql:/docker-entrypoint-initdb.d/setup-bdd.sql
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
