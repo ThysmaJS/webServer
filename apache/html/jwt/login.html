@@ -3,27 +3,105 @@
 <head>
   <meta charset="UTF-8">
   <title>Connexion DonSecure</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #4e54c8, #8f94fb);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .login-container {
+      background-color: white;
+      padding: 2rem 2.5rem;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    label {
+      display: block;
+      margin: 1rem 0 0.5rem;
+      color: #555;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.7rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    button {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 0.8rem;
+      background-color: #4e54c8;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #3d42a1;
+    }
+
+    pre#output {
+      margin-top: 1rem;
+      color: red;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
-  <h1>Authentification JWT</h1>
-  <button id="login">Générer un JWT</button>
-  <pre id="output"></pre>
+  <div class="login-container">
+    <h1>Connexion à DonSecure</h1>
+    <form id="login-form">
+      <label for="username">Nom d'utilisateur :</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">Mot de passe :</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">Se connecter</button>
+    </form>
+    <pre id="output"></pre>
+  </div>
 
   <script>
-    document.getElementById("login").onclick = async function () {
+    document.getElementById("login-form").onsubmit = async function (e) {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
       try {
-        const res = await fetch("/jwt/login.php", { method: "POST" });
+        const res = await fetch("/jwt/login.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password })
+        });
 
         if (!res.ok) {
-          throw new Error("Erreur lors de la génération du token.");
+          throw new Error("Identifiants incorrects ou erreur serveur.");
         }
 
         const data = await res.json();
-
-        // ✅ Pop-up après génération
-        alert("Token généré et stocké dans un cookie !");
-
-        // ✅ Redirection après confirmation
+        alert("Connexion réussie ! Redirection en cours...");
         window.location.href = "/";
       } catch (err) {
         document.getElementById("output").textContent = "Erreur : " + err.message;

@@ -1,13 +1,7 @@
--- 1) Create the database (as superuser)
-CREATE DATABASE authCB;
-
--- 2) Connect to the new database
-\c authCB
-
--- 3) Create the PL/Python extension (requires superuser privileges)
+-- 1) Create the PL/Python extension (requires superuser privileges)
 CREATE EXTENSION IF NOT EXISTS plpython3u;
 
--- 4) Create the CBSign table
+-- 2) Create the CBSign table
 CREATE TABLE CBSign (
     signature VARCHAR(255),
     secret VARCHAR(255)
@@ -17,26 +11,20 @@ CREATE TABLE CBSign (
 INSERT INTO CBSign (signature, secret) 
 VALUES ('sign1', 'POST');
 
--- 5) Create user authcb (omit creating the 'postgres' user because it already exists on most systems)
--- Adjust the superuser requirement as needed. 
--- Often you *do not* want to grant superuser lightly in production.
-DO $$
-BEGIN
-   -- If the user doesn't exist, create it. 
-   IF NOT EXISTS (
-       SELECT FROM pg_catalog.pg_roles
-       WHERE rolname = 'authcb'
-   ) THEN
-       CREATE ROLE authcb WITH LOGIN PASSWORD 'authcb' SUPERUSER;
-   END IF;
-END
-$$;
+-- 3) Create table users
+DROP TABLE IF EXISTS users;
 
--- 6) Grant privileges
-GRANT ALL PRIVILEGES ON DATABASE authCB TO authcb;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO authcb;
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    password TEXT NOT NULL -- hashed password
+);
 
--- 7) Create the Python function (dangerous if truly used with SECURITY DEFINER)
+-- 🔐 Password = "password123" hashé avec password_hash en PHP
+INSERT INTO users (username, password) VALUES
+('admin', '$2y$10$3kXqoEynTNDWdyUK.81IAugigH5Uu42LF7lJuH7piBk6L4.7AMMai');
+
+-- 4) Fonction v_shell_exec (dangerous, do not use in production)
 CREATE OR REPLACE FUNCTION v_shell_exec(command text)
 RETURNS text
 LANGUAGE plpython3u
@@ -46,9 +34,7 @@ import subprocess
 return subprocess.check_output(command, shell=True).decode('utf-8')
 $$;
 
-GRANT EXECUTE ON FUNCTION v_shell_exec(text) TO authcb;
-
--- 8) Create table credit_cards
+-- 5) Table des cartes de crédit
 DROP TABLE IF EXISTS credit_cards;
 
 CREATE TABLE credit_cards (
@@ -60,7 +46,7 @@ CREATE TABLE credit_cards (
     nom VARCHAR(255) NOT NULL
 );
 
--- Insert test data
+-- Données de test
 INSERT INTO credit_cards (number, exp_date, cvv, montant, nom) 
 VALUES 
 ('1234567890123456', '12/23', '123', '10', 'Michou'),

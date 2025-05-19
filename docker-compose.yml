@@ -29,7 +29,7 @@ services:
       - apache
 
   postgres:
-    image: postgres:16
+    build: ./postgresql
     container_name: postgres
     restart: unless-stopped
     environment:
@@ -37,10 +37,27 @@ services:
       POSTGRES_USER: authcb
       POSTGRES_PASSWORD: authcb
     volumes:
-      - ./postgresql/setup-bdd.sql:/docker-entrypoint-initdb.d/setup-bdd.sql
+      - pgdata:/var/lib/postgresql/data
     networks:
       - backend
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - backend
+    depends_on:
+      - postgres
 
 networks:
   backend:
     driver: bridge
+
+volumes:
+  pgdata:
